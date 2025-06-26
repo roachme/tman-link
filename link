@@ -1,0 +1,129 @@
+#!/bin/bash
+
+PGNAME="tman-link"
+VERSION="v0.0.1"
+COMMAND=
+TASKDIR=
+PRJNAME=
+TASKNAME=
+ISDEBUG=false
+
+# TODO: add option for config path on CLI
+CONFIG_FILE=
+
+function elog()
+{
+    echo "$PGNAME:" "$@" >&2
+}
+
+function dlog()
+{
+    if [ "$ISDEBUG" == true ]; then
+        echo "$PGNAME:" "$@"
+    fi
+}
+
+function usage()
+{
+cat << EOF
+Usage: tman link [OPTION]... SRC DST
+    help        show this help message and exit
+    show        show linked tasks
+EOF
+}
+
+function _check_args()
+{
+    # TODO: check board name when support is added
+    if [ -z "$PRJNAME" ]; then
+        elog "no project name is passed"
+        exit 1
+    elif [ -z "$TASKNAME" ]; then
+        elog "no task ID is passed"
+        exit 1
+    elif [ -z "$PGNDIRBASE" ]; then
+        elog "no plugin directory is passed"
+        exit 1
+    elif [ -z "$TASKDIR" ]; then
+        elog "no task directory is passed"
+        exit 1
+    fi
+}
+
+function link_help()
+{
+    usage
+}
+
+function link_show()
+{
+    echo "under development"
+}
+
+
+# Driver part of the code
+OPTS=$(getopt -o db:i:p:P:T:hV --long debug,board:,prj:,taskid:,pgndir:,taskdir:help,version -n "$PGNAME" -- "$@")
+if [ $? -ne 0 ]; then
+    #echo "error parsing options" >&2
+    exit 1
+fi
+
+## Reset the positional parameters to the parsed options
+eval set -- "$OPTS"
+
+while true; do
+    case "$1" in
+        -b)
+            BOARDNAME="$2"
+            shift 2
+            ;;
+        -d)
+            ISDEBUG="$2"
+            shift 1
+            ;;
+        -i)
+            TASKNAME="$2"
+            shift 2
+            ;;
+        -p)
+            PRJNAME="$2"
+            shift 2
+            ;;
+        -P)
+            PGNDIRBASE="$2"
+            shift 2
+            ;;
+        -T)
+            TASKDIR="$2"
+            shift 2
+            ;;
+        -V)
+            echo "$PGNAME: $VERSION"
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            elog "invalid option '$1'"
+            exit 1
+    esac
+done
+
+# TODO: add default command (maybe)
+COMMAND="$1"; shift
+
+_check_args
+
+if [ -z "$COMMAND" ]; then
+    elog "no command passed"
+    exit 1
+elif [ "$COMMAND" = "help" ]; then
+    link_help "$@"
+elif [ "$COMMAND" = "show" ]; then
+    link_show "$@"
+else
+    elog "'$COMMAND': no such command"
+    exit 1
+fi
